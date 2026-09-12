@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Event Manager — Admin & Student Dashboard</title>
+  <!-- Tailwind CSS CDN for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- TOP APP HEADER -->
+  <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-indigo-600 rounded-lg text-white font-bold text-xl">🎓</div>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight text-white">College Event Hub</h1>
+          <p class="text-xs text-slate-400">Full-Stack Firebase + MongoDB Management Panel</p>
+        </div>
+      </div>
+      <!-- User profile header status -->
+      <div id="auth-header-status" class="flex items-center gap-4 text-sm">
+        <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium bg-red-500/10 text-red-400">
+          <span class="w-1.5 h-1.5 inline-block bg-red-400 rounded-full"></span> Disconnected
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- LEFT PANEL: FIREBASE CONFIG & AUTHENTICATION -->
+    <section class="lg:col-span-4 flex flex-col gap-6">
+      
+      <!-- STEP 1: FIREBASE CLIENT CONFIGURATION -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs text-indigo-400">1</span>
+            Firebase Client Init
+          </h2>
+          <span id="firebase-status" class="text-xs text-amber-400">Not Initialized</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">Paste your Firebase Project Web Configuration credentials to authenticate locally.</p>
+        
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Web API Key</label>
+            <input type="password" id="fb-api-key" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" placeholder="AIzaSy...">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-400 mb-1">Project ID</label>
+              <input type="text" id="fb-project-id" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" placeholder="your-app-id">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Auth Domain</label>
+              <input type="text" id="fb-auth-domain" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" placeholder="project.firebaseapp.com">
+            </div>
+          </div>
+          <button id="btn-init-fb" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded transition-colors duration-150">
+            Initialize Client SDK
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: USER LOGIN & REGISTER -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-xl">
+        <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+          <span class="flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs text-indigo-400">2</span>
+          Identity Authentication
+        </h2>
+        
+        <!-- Auth Form -->
+        <div id="auth-form-container" class="space-y-3 hidden">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Email Address</label>
+            <input type="email" id="auth-email" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" placeholder="student@college.edu">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Password</label>
+            <input type="password" id="auth-password" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500" placeholder="••••••••">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <button id="btn-login" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold py-2 rounded transition">
+              Sign In
+            </button>
+            <button id="btn-register" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 rounded transition">
+              Sign Up
+            </button>
+          </div>
+        </div>
+
+        <div id="auth-fallback-msg" class="text-sm text-slate-500 text-center py-4">
+          Please complete Step 1 to load the authentication panel.
+        </div>
+
+        <!-- Authenticated State Info -->
+        <div id="active-user-container" class="hidden space-y-4">
+          <div class="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
+            <p class="text-xs text-indigo-400 font-semibold mb-1">Active Firebase Session</p>
+            <p class="text-sm text-slate-200 font-bold" id="active-user-email">email@test.com</p>
+            <p class="text-[10px] text-slate-500 break-all font-mono mt-1" id="active-user-uid">UID: loading...</p>
+          </div>
+
+          <div class="space-y-2">
+            <button id="btn-copy-token" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs py-2 px-3 rounded flex items-center justify-center gap-2 transition">
+              📋 Copy JWT ID Token
+            </button>
+            <button id="btn-logout" class="w-full border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs py-2 rounded transition">
+              Sign Out Session
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: MONGODB DATABASE PROFILE -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-xl">
+        <h2 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+          <span class="flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-xs text-indigo-400">3</span>
+          MongoDB Profile
+        </h2>
+        <p class="text-xs text-slate-400 mb-4">Maps your Firebase Authentication account to a profile document in MongoDB Atlas.</p>
+
+        <div id="profile-status-container" class="hidden space-y-3">
+          <!-- Profile Check Trigger -->
+          <div id="profile-check-box" class="p-3 bg-slate-900 border border-slate-700 rounded text-center">
+            <p class="text-xs text-slate-400 mb-2">No Profile verified in database yet</p>
+            <button id="btn-check-profile" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 px-4 rounded transition">
+              Lookup/Create Profile
+            </button>
+          </div>
+
+          <!-- Profile Info -->
+          <div id="profile-info-box" class="hidden p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg space-y-1">
+            <p class="text-xs text-emerald-400 font-bold">✓ Profile Connected</p>
+            <p class="text-sm font-bold text-white" id="p-info-name">Rahul Sharma</p>
+            <p class="text-xs text-slate-300" id="p-info-college">ABC College</p>
+            <p class="text-xs text-slate-400" id="p-info-dept">Computer Science</p>
+            <p class="text-[10px] text-slate-500 font-mono mt-1" id="p-info-mongoid">MongoID: ...</p>
+          </div>
+
+          <!-- Create Profile Form -->
+          <form id="profile-create-form" class="hidden space-y-3 bg-slate-900 p-4 border border-slate-700 rounded-lg">
+            <p class="text-xs font-semibold text-indigo-400">Complete Database Registration</p>
+            <div>
+              <label class="block text-[10px] text-slate-400 uppercase mb-1">Full Name</label>
+              <input type="text" id="prof-name" class="w-full text-xs bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100" placeholder="Rahul Sharma" required>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 uppercase mb-1">College/University</label>
+              <input type="text" id="prof-college" class="w-full text-xs bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100" placeholder="ABC College" required>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 uppercase mb-1">Department</label>
+              <input type="text" id="prof-dept" class="w-full text-xs bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100" placeholder="Computer Science" required>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 rounded transition">
+              Create Profile (POST /api/users)
+            </button>
+          </form>
+        </div>
+
+        <div id="profile-fallback-msg" class="text-sm text-slate-500 text-center py-2">
+          Login first to synchronize database profile.
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: INTERACTIVE REST APIS -->
+    <section class="lg:col-span-8 flex flex-col gap-6">
+      
+      <!-- CONTROLS & EVENT FILTER BOARD -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-xl">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white">Event Board Directory</h2>
+            <p class="text-xs text-slate-400">Interactive live search and CRUD execution</p>
+          </div>
+          <!-- Create Event Modal Button -->
+          <button id="btn-open-create-modal" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center gap-2 transition shadow-lg shadow-indigo-600/20">
+            ➕ Publish New Event
+          </button>
+        </div>
+
+        <!-- SEARCH & FILTER TOOLBAR -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+          <div class="md:col-span-2 relative">
+            <input type="text" id="search-q" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 placeholder-slate-500" placeholder="Search titles or descriptions...">
+          </div>
+          <div>
+            <select id="search-category" class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+              <option value="">All Categories</option>
+              <option value="Technical">Technical</option>
+              <option value="Cultural">Cultural</option>
+              <option value="Sports">Sports</option>
+              <option value="Workshop">Workshop</option>
+            </select>
+          </div>
+          <div>
+            <button id="btn-search" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold py-1.5 rounded transition">
+              🔍 Execute Search
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN RESULTS CONTAINER -->
+      <div id="events-grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Load Status Placeholder -->
+        <div class="col-span-full py-16 text-center text-slate-500 bg-slate-800/40 rounded-xl border border-dashed border-slate-700">
+          <p class="text-base mb-1">Awaiting Credentials & Authentication</p>
+          <p class="text-xs max-w-sm mx-auto">Please initialize the Firebase SDK client and log in to fetch events live from MongoDB.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: CREATE / EDIT EVENT FORM -->
+  <div id="event-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="bg-slate-900 border-b border-slate-700 py-4 px-5 flex justify-between items-center">
+        <h3 id="modal-title" class="font-bold text-white text-base">Publish College Event</h3>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+      <form id="event-modal-form" class="p-5 space-y-4">
+        <input type="hidden" id="event-id-field">
+        
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Event Title</label>
+          <input type="text" id="event-title" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100" placeholder="Annual Tech Fest" required>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Description</label>
+          <textarea id="event-desc" rows="3" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100" placeholder="Provide full details of categories and guidelines" required></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Hosting College</label>
+            <input type="text" id="event-college" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100" placeholder="ABC College" required>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Category</label>
+            <select id="event-category" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-300" required>
+              <option value="Technical">Technical</option>
+              <option value="Cultural">Cultural</option>
+              <option value="Sports">Sports</option>
+              <option value="Workshop">Workshop</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Schedule Date</label>
+            <input type="datetime-local" id="event-date" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100" required>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Venue Room/Hall</label>
+            <input type="text" id="event-venue" class="w-full text-sm bg-slate-900 border border-slate-700 rounded px-3 py-2 text-slate-100" placeholder="Main Auditorium" required>
+          </div>
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" id="btn-cancel-modal" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs py-2 px-4 rounded transition">Cancel</button>
+          <button type="submit" id="btn-submit-modal" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-4 rounded transition">Publish Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- REGISTRATIONS VIEWER PANEL (SLIDEOVER / MODAL) -->
+  <div id="regs-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+      <div class="bg-slate-900 border-b border-slate-700 py-4 px-5 flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-white text-base">Student Registrations</h3>
+          <p id="regs-event-title" class="text-xs text-indigo-400">Loading registrations...</p>
+        </div>
+        <button id="btn-close-regs" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+      <div id="regs-list-container" class="p-5 overflow-y-auto space-y-3 flex-grow text-sm">
+        <!-- Rendered list -->
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-slate-950 border-t border-slate-800 text-center py-4 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>© Developed for College Event Management Backend REST API Assignment.</p>
+    </div>
+  </footer>
+
+  <!-- Firebase JavaScript v10 Client SDK Module Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Global Client Variables
+    let app, auth, activeUser, activeToken;
+    let localUserData = null; // MongoDB User data
+
+    // DOM Elements Cache
+    const elInitBtn = document.getElementById('btn-init-fb');
+    const elFbStatus = document.getElementById('firebase-status');
+    const elAuthForm = document.getElementById('auth-form-container');
+    const elAuthFallback = document.getElementById('auth-fallback-msg');
+    const elActiveUserContainer = document.getElementById('active-user-container');
+    const elUserEmail = document.getElementById('active-user-email');
+    const elUserUid = document.getElementById('active-user-uid');
+    const elAuthHeader = document.getElementById('auth-header-status');
+    const elProfileContainer = document.getElementById('profile-status-container');
+    const elProfileFallback = document.getElementById('profile-fallback-msg');
+    const elProfileCheck = document.getElementById('profile-check-box');
+    const elProfileInfo = document.getElementById('profile-info-box');
+    const elProfileForm = document.getElementById('profile-create-form');
+
+    const elEventsGrid = document.getElementById('events-grid-container');
+    const elBtnPublishModal = document.getElementById('btn-open-create-modal');
+
+    // Autoload Configuration values from localStorage if they exist to ease testing
+    document.getElementById('fb-api-key').value = localStorage.getItem('fb_key') || '';
+    document.getElementById('fb-project-id').value = localStorage.getItem('fb_id') || '';
+    document.getElementById('fb-auth-domain').value = localStorage.getItem('fb_domain') || '';
+
+    // Step 1: Initialize Firebase Client
+    elInitBtn.addEventListener('click', () => {
+      const apiKey = document.getElementById('fb-api-key').value.trim();
+      const projectId = document.getElementById('fb-project-id').value.trim();
+      const authDomain = document.getElementById('fb-auth-domain').value.trim();
+
+      if (!apiKey || !projectId || !authDomain) {
+        alert('Please fill all Firebase credentials fields');
+        return;
+      }
+
+      try {
+        const firebaseConfig = { apiKey, authDomain, projectId };
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        
+        // Cache credentials so they persist on refresh
+        localStorage.setItem('fb_key', apiKey);
+        localStorage.setItem('fb_id', projectId);
+        localStorage.setItem('fb_domain', authDomain);
+
+        elFbStatus.textContent = "✓ Connected";
+        elFbStatus.className = "text-xs text-emerald-400 font-bold";
+        elAuthFallback.classList.add('hidden');
+        elAuthForm.classList.remove('hidden');
+
+        // Watch Authentication Session
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            activeUser = user;
+            activeToken = await user.getIdToken();
+            handleLoginSuccess(user);
+          } else {
+            handleLogoutSuccess();
+          }
+        });
+
+      } catch (err) {
+        alert('Initialization failed: ' + err.message);
+      }
+    });
+
+    // Handle Authentication Panel Sign-Up
+    document.getElementById('btn-register').addEventListener('click', async () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      if (!email || !password) return alert('Input credentials!');
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert('Firebase User account created successfully!');
+      } catch (err) {
+        alert('Sign Up failed: ' + err.message);
+      }
+    });
+
+    // Handle Authentication Panel Sign-In
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      if (!email || !password) return alert('Input credentials!');
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert('Login failed: ' + err.message);
+      }
+    });
+
+    // Handle Sign-Out
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+      } catch (err) {
+        alert('Log out failed: ' + err.message);
+      }
+    });
+
+    // Copy Token to clipboard
+    document.getElementById('btn-copy-token').addEventListener('click', () => {
+      if (activeToken) {
+        navigator.clipboard.writeText(activeToken);
+        alert('Token copied to clipboard! You can paste this in Postman.');
+      }
+    });
+
+    // UI Updates on Auth state changes
+    async function handleLoginSuccess(user) {
+      elAuthForm.classList.add('hidden');
+      elActiveUserContainer.classList.remove('hidden');
+      elUserEmail.textContent = user.email;
+      elUserUid.textContent = `UID: ${user.uid}`;
+      
+      elAuthHeader.innerHTML = `
+        <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
+          <span class="w-1.5 h-1.5 inline-block bg-emerald-400 rounded-full"></span> Online: ${user.email}
+        </span>
+      `;
+
+      elProfileFallback.classList.add('hidden');
+      elProfileContainer.classList.remove('hidden');
+
+      // Attempt to automatically check MongoDB profile
+      await checkMongoDBProfile();
+    }
+
+    function handleLogoutSuccess() {
+      activeUser = null;
+      activeToken = null;
+      localUserData = null;
+
+      elActiveUserContainer.classList.add('hidden');
+      elAuthForm.classList.remove('hidden');
+      
+      elAuthHeader.innerHTML = `
+        <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium bg-red-500/10 text-red-400">
+          <span class="w-1.5 h-1.5 inline-block bg-red-400 rounded-full"></span> Disconnected
+        </span>
+      `;
+
+      elProfileContainer.classList.add('hidden');
+      elProfileFallback.classList.remove('hidden');
+      elProfileCheck.classList.remove('hidden');
+      elProfileInfo.classList.add('hidden');
+      elProfileForm.classList.add('hidden');
+
+      elBtnPublishModal.classList.add('hidden');
+
+      renderDisconnectedEvents();
+    }
+
+    // Step 3: MongoDB Database profile handling
+    document.getElementById('btn-check-profile').addEventListener('click', checkMongoDBProfile);
+
+    async function checkMongoDBProfile() {
+      if (!activeToken) return;
+      try {
+        // We will retrieve user's profile. Since we don't know their Mongo ID,
+        // we can find it by searching or simply attempting to call `/api/users/current`
+        // Wait, endpoint is exactly: GET /api/users/:id.
+        // Let's call GET /api/events first to see if we can get database info, 
+        // or we check if user has stored profile in localStorage, or make a safe guess.
+        // Let's use a standard pattern: we can list events or store their MongoID in localStorage.
+        const storedMongoId = localStorage.getItem(`mongo_id_${activeUser.uid}`);
+        
+        if (storedMongoId) {
+          const res = await fetch(`/api/users/${storedMongoId}`, {
+            headers: { 'Authorization': `Bearer ${activeToken}` }
+          });
+          const result = await res.json();
+          if (result.success) {
+            localUserData = result.data;
+            showProfileUI(result.data);
+            return;
+          }
+        }
+
+        // If no stored ID or fetch failed, show registration profile creation form
+        elProfileCheck.classList.add('hidden');
+        elProfileForm.classList.remove('hidden');
+      } catch (err) {
+        elProfileCheck.classList.add('hidden');
+        elProfileForm.classList.remove('hidden');
+      }
+    }
+
+    // Submit profile registration form (POST /api/users)
+    elProfileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('prof-name').value;
+      const college = document.getElementById('prof-college').value;
+      const department = document.getElementById('prof-dept').value;
+
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeToken}`
+          },
+          body: JSON.stringify({ name, college, department })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          localUserData = result.data;
+          // Store MongoDB ID associated with Firebase UID locally so we can fetch it automatically next time
+          localStorage.setItem(`mongo_id_${activeUser.uid}`, result.data.id);
+          showProfileUI(result.data);
+          alert('MongoDB Profile registered successfully!');
+        } else {
+          alert('Registration Error: ' + result.message);
+        }
+      } catch (err) {
+        alert('Server Error: ' + err.message);
+      }
+    });
+
+    function showProfileUI(user) {
+      elProfileForm.classList.add('hidden');
+      elProfileCheck.classList.add('hidden');
+      elProfileInfo.classList.remove('hidden');
+
+      document.getElementById('p-info-name').textContent = user.name;
+      document.getElementById('p-info-college').textContent = user.college;
+      document.getElementById('p-info-dept').textContent = user.department;
+      document.getElementById('p-info-mongoid').textContent = `MongoID: ${user.id}`;
+
+      // Show CRUD Creation Option
+      elBtnPublishModal.classList.remove('hidden');
+
+      // Refresh events Board
+      loadEvents();
+    }
+
+    // Interactive event search & CRUD list
+    const loadEvents = async (customQuery = '') => {
+      if (!activeToken) return;
+      elEventsGrid.innerHTML = `
+        <div class="col-span-full py-16 text-center text-slate-400">
+          <p class="animate-pulse">Fetching events from MongoDB Atlas...</p>
+        </div>
+      `;
+      try {
+        const url = customQuery ? `/api/events/search?${customQuery}` : '/api/events?limit=50';
+        const res = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${activeToken}` }
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+          renderEventsGrid(result.data);
+        } else {
+          elEventsGrid.innerHTML = `
+            <div class="col-span-full py-16 text-center text-red-400 bg-slate-800/20 border border-red-500/30 rounded-xl">
+              <p class="font-bold">Error loading database events</p>
+              <p class="text-xs text-slate-400 mt-1">${result.message}</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        elEventsGrid.innerHTML = `<p class="col-span-full text-center text-red-500 py-10">Server communication error</p>`;
+      }
+    };
+
+    function renderEventsGrid(events) {
+      if (!events || events.length === 0) {
+        elEventsGrid.innerHTML = `
+          <div class="col-span-full py-16 text-center text-slate-500 bg-slate-800/40 rounded-xl border border-slate-700">
+            <p class="text-base mb-1">No Events Found</p>
+            <p class="text-xs max-w-xs mx-auto">Be the first to publish a college event using the button above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      elEventsGrid.innerHTML = events.map(event => {
+        // Safely determine creator details
+        const isOwner = localUserData && event.createdBy && 
+                        (event.createdBy === localUserData.id || event.createdBy.id === localUserData.id);
+        const creatorName = event.createdBy?.name || 'Academic Administrator';
+        
+        const formattedDate = new Date(event.date).toLocaleString([], {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        });
+
+        return `
+          <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg hover:border-slate-600 transition flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start gap-2 mb-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  ${event.category}
+                </span>
+                <span class="text-xs text-slate-500 font-mono">${event.college}</span>
+              </div>
+              <h3 class="text-base font-bold text-white mb-2">${event.title}</h3>
+              <p class="text-xs text-slate-400 line-clamp-3 mb-4">${event.description}</p>
+              
+              <div class="space-y-1.5 text-xs text-slate-300 border-t border-slate-700/60 pt-3">
+                <p class="flex items-center gap-1.5"><span class="text-slate-500">📅</span> ${formattedDate}</p>
+                <p class="flex items-center gap-1.5"><span class="text-slate-500">📍</span> ${event.venue}</p>
+                <p class="flex items-center gap-1.5"><span class="text-slate-500">👤</span> Org: <span class="text-slate-400 font-medium">${creatorName}</span></p>
+              </div>
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-slate-700 flex flex-wrap gap-2">
+              <!-- General Student Action -->
+              <button onclick="registerForEvent('${event.id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-1.5 px-3 rounded flex-grow transition">
+                Register Seat (POST)
+              </button>
+              
+              <!-- Owner Action Buttons -->
+              ${isOwner ? `
+                <button onclick="viewRegistrations('${event.id}', '${event.title}')" class="bg-slate-700 hover:bg-slate-600 text-amber-400 text-xs py-1.5 px-2 rounded transition" title="View Registrations">
+                  👥 View Regs (GET)
+                </button>
+                <button onclick="openEditModal('${event.id}', '${escapeHtml(JSON.stringify(event))}')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-1.5 px-2 rounded transition">
+                  ✏️ Edit
+                </button>
+                <button onclick="deleteEvent('${event.id}')" class="border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs py-1.5 px-2 rounded transition">
+                  🗑️ Del
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDisconnectedEvents() {
+      elEventsGrid.innerHTML = `
+        <div class="col-span-full py-16 text-center text-slate-500 bg-slate-800/40 rounded-xl border border-dashed border-slate-700">
+          <p class="text-base mb-1">Awaiting Credentials & Authentication</p>
+          <p class="text-xs max-w-sm mx-auto">Please initialize the Firebase SDK client and log in to fetch events live from MongoDB.</p>
+        </div>
+      `;
+    }
+
+    // Modal Control Operations
+    const modal = document.getElementById('event-modal');
+    const modalForm = document.getElementById('event-modal-form');
+    
+    elBtnPublishModal.addEventListener('click', () => {
+      modalForm.reset();
+      document.getElementById('event-id-field').value = '';
+      document.getElementById('modal-title').textContent = 'Publish College Event';
+      document.getElementById('btn-submit-modal').textContent = 'Publish Event (POST)';
+      modal.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-close-modal').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('btn-cancel-modal').addEventListener('click', () => modal.classList.add('hidden'));
+
+    // Handle Edit Event trigger from Grid button
+    window.openEditModal = (id, rawJson) => {
+      const event = JSON.parse(rawJson);
+      document.getElementById('event-id-field').value = event.id;
+      document.getElementById('event-title').value = event.title;
+      document.getElementById('event-desc').value = event.description;
+      document.getElementById('event-college').value = event.college;
+      document.getElementById('event-category').value = event.category;
+      
+      // Convert timestamp ISO to compatible datetime-local input string
+      const dateVal = new Date(event.date);
+      dateVal.setMinutes(dateVal.getMinutes() - dateVal.getTimezoneOffset());
+      document.getElementById('event-date').value = dateVal.toISOString().slice(0, 16);
+      
+      document.getElementById('event-venue').value = event.venue;
+
+      document.getElementById('modal-title').textContent = 'Update College Event';
+      document.getElementById('btn-submit-modal').textContent = 'Update Event (PUT)';
+      modal.classList.remove('hidden');
+    };
+
+    // Publish / Edit Form submit handler
+    modalForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('event-id-field').value;
+      const title = document.getElementById('event-title').value;
+      const description = document.getElementById('event-desc').value;
+      const college = document.getElementById('event-college').value;
+      const category = document.getElementById('event-category').value;
+      const date = new Date(document.getElementById('event-date').value).toISOString();
+      const venue = document.getElementById('event-venue').value;
+
+      const payload = { title, description, college, category, date, venue };
+      
+      const isEdit = !!id;
+      const url = isEdit ? `/api/events/${id}` : '/api/events';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeToken}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) {
+          modal.classList.add('hidden');
+          loadEvents();
+          alert(isEdit ? 'Event updated successfully!' : 'Event published successfully!');
+        } else {
+          alert('Operation Error: ' + result.message);
+        }
+      } catch (err) {
+        alert('Server connection failure: ' + err.message);
+      }
+    });
+
+    // Handle Delete API Call
+    window.deleteEvent = async (id) => {
+      if (!confirm('Are you absolutely sure you want to delete this event? This will cascade-delete all registrations!')) return;
+      try {
+        const res = await fetch(`/api/events/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${activeToken}` }
+        });
+        const result = await res.json();
+        if (result.success) {
+          loadEvents();
+          alert('Event and registrations permanently deleted!');
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (err) {
+        alert('Deletion failed: ' + err.message);
+      }
+    };
+
+    // Handle Register API Call
+    window.registerForEvent = async (id) => {
+      try {
+        const res = await fetch(`/api/events/${id}/register`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${activeToken}` }
+        });
+        const result = await res.json();
+        alert(result.message);
+      } catch (err) {
+        alert('Server communication error');
+      }
+    };
+
+    // Handle View Registrations (GET /api/events/:id/registrations)
+    const elRegsModal = document.getElementById('regs-modal');
+    const elRegsTitle = document.getElementById('regs-event-title');
+    const elRegsList = document.getElementById('regs-list-container');
+
+    window.viewRegistrations = async (id, title) => {
+      elRegsTitle.textContent = title;
+      elRegsList.innerHTML = '<p class="text-slate-400 py-4 text-center">Loading registrations list...</p>';
+      elRegsModal.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`/api/events/${id}/registrations`, {
+          headers: { 'Authorization': `Bearer ${activeToken}` }
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          const regs = result.data;
+          if (regs.length === 0) {
+            elRegsList.innerHTML = '<p class="text-slate-500 py-6 text-center">No students have registered for this event yet.</p>';
+            return;
+          }
+
+          elRegsList.innerHTML = regs.map(reg => {
+            const student = reg.userId;
+            const registeredDate = new Date(reg.registeredAt).toLocaleString();
+            return `
+              <div class="p-3 bg-slate-900 rounded-lg border border-slate-700/60">
+                <div class="flex justify-between items-start mb-1.5">
+                  <p class="font-bold text-slate-100">${student.name}</p>
+                  <span class="text-[10px] text-slate-500">${registeredDate}</span>
+                </div>
+                <p class="text-xs text-slate-300">${student.college} • <span class="text-indigo-400">${student.department}</span></p>
+                <p class="text-xs text-slate-400 font-mono mt-1">${student.email}</p>
+              </div>
+            `;
+          }).join('');
+        } else {
+          elRegsList.innerHTML = `<p class="text-red-400 py-4 text-center">Failed to fetch: ${result.message}</p>`;
+        }
+      } catch (err) {
+        elRegsList.innerHTML = '<p class="text-red-500 py-4 text-center">Communication failure</p>';
+      }
+    };
+
+    document.getElementById('btn-close-regs').addEventListener('click', () => elRegsModal.classList.add('hidden'));
+
+    // Handle execution of Event Search
+    document.getElementById('btn-search').addEventListener('click', () => {
+      const q = document.getElementById('search-q').value.trim();
+      const category = document.getElementById('search-category').value;
+      
+      const queryParams = [];
+      if (q) queryParams.push(`q=${encodeURIComponent(q)}`);
+      if (category) queryParams.push(`category=${encodeURIComponent(category)}`);
+      
+      loadEvents(queryParams.join('&'));
+    });
+
+    // Helper: Escape Special HTML Characters
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
